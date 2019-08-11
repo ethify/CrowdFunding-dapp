@@ -21,3 +21,9 @@ The creator asking for funds should set a deadline for raising 100% of the funds
 * You should aim for a viable permaweb-based app with the smart contract fully respecting the challenge description.
 
 * The project needs to be open-source and released on GitHub for us to review the entire source.
+
+
+## Team Members
+
+1. Sanchay Mittal
+2. Sachin Mittal
