@@ -25,7 +25,7 @@ The creator asking for funds should set a deadline for raising 100% of the funds
 
 ## Team Members
 
-1. Sanchay Mittal
-2. Sachin Mittal
-3. Manank Jain
-4. Abhimanyu Shikhavat
+1. [Sanchay Mittal](https://github.com/sanchaymittal) - @sanchaymittal
+2. [Sachin Mittal](https://github.com/thesachinmittal) - @thesachinmittal
+3. [Manank Jain](https://github.com/Man-Jain) - @Man-Jain
+4. [Abhimanyu Shikhavat](https://github.com/Abhimanyu121) - @Abhimanyu121
