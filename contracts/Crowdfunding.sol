@@ -27,7 +27,7 @@ contract Crowdfunding {
 
     Properties public properties;
 
-    event LogContributionReceived(address projectAddress, address payable contributor, uint amount);
+    event LogContributionReceived(address projectAddress, address  contributor, uint amount);
     event LogPayoutInitiated(address projectAddress, address owner, uint totalPayout);
     event LogRefundIssued(address projectAddress, address contributor, uint refundAmount);
     event LogFundingGoalReached(address projectAddress, uint totalFunding, uint totalContributions);
@@ -154,10 +154,8 @@ contract Crowdfunding {
         if (prevContributionBalance == 0) {
             contributorsCount++;
         }
-        address payable addr = address(uint160(address(this)));
-        emit LogContributionReceived(addr, _contributor, msg.value);
-
-        // Check again to see whether the last contribution met the fundingGoal
+       // address payable addr = address(uint160(address(this)));
+        emit LogContributionReceived(address(this), _contributor, msg.value);
         if (totalFunding >= properties.goal) {
             emit LogFundingGoalReached(address(this), totalFunding, contributionsCount);
             payout();
