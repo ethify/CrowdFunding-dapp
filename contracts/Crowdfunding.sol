@@ -1,6 +1,6 @@
 pragma solidity ^0.5.0;
 
-import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/crowdsale/Crowdsale.sol";
+import "node_modules/openzeppelin-solidity/contracts/crowdsale/Crowdsale.sol";
 
 contract Crowdfunding {
 
