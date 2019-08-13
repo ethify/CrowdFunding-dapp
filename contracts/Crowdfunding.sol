@@ -1,6 +1,6 @@
 pragma solidity ^0.5.0;
 
-import "node_modules/openzeppelin-solidity/contracts/crowdsale/Crowdsale.sol";
+import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/crowdsale/Crowdsale.sol";
 
 contract Crowdfunding {
 
@@ -8,7 +8,7 @@ contract Crowdfunding {
         uint goal;
         uint deadline;
         string title;
-        address creator;
+        address payable creator;
     }
 
     struct Contribution {
@@ -16,7 +16,7 @@ contract Crowdfunding {
         address contributor;
     }
 
-    address public fundingHub;
+    address payable public fundingHub;
 
     mapping (address => uint) public contributors;
     mapping (uint => Contribution) public contributions;
@@ -27,7 +27,7 @@ contract Crowdfunding {
 
     Properties public properties;
 
-    event LogContributionReceived(address projectAddress, address contributor, uint amount);
+    event LogContributionReceived(address projectAddress, address payable contributor, uint amount);
     event LogPayoutInitiated(address projectAddress, address owner, uint totalPayout);
     event LogRefundIssued(address projectAddress, address contributor, uint refundAmount);
     event LogFundingGoalReached(address projectAddress, uint totalFunding, uint totalContributions);
@@ -45,7 +45,7 @@ contract Crowdfunding {
         _;
     }
 
-    constructor(uint _fundingGoal, uint _deadline, string memory _title, address _creator) pulbic{
+    constructor(uint _fundingGoal, uint _deadline, string memory _title, address payable _creator) public{
 
         // Check to see the funding goal is greater than 0
         require(_fundingGoal > 0, "Project funding goal must be greater than 0");
@@ -54,7 +54,7 @@ contract Crowdfunding {
         require(block.number < _deadline,"Project deadline must be greater than the current block");
 
         // Check to see that a creator (payout) address is valid
-        require(_creator != 0,"Project must include a valid creator address");
+        require(_creator != 0x0000000000000000000000000000000000000000,"Project must include a valid creator address");
 
         fundingHub = msg.sender;
 
@@ -83,7 +83,7 @@ contract Crowdfunding {
     * [7] -> Project.fundingHub
     * [8] -> Project (address)
     */
-    function getProject() public returns (string, uint, uint, address, uint, uint, uint, address, address) {
+    function getProject() public returns (string memory, uint, uint, address, uint, uint, uint, address, address) {
         return (properties.title,
                 properties.goal,
                 properties.deadline,
@@ -101,7 +101,7 @@ contract Crowdfunding {
     * [1] -> Contribution.contributor
     */
     function getContribution(uint _id) public returns (uint, address) {
-        Contribution c = contributions[_id];
+        Contribution memory c  = contributions[_id];
         return (c.amount, c.contributor);
     }
 
@@ -113,7 +113,7 @@ contract Crowdfunding {
      * If the full funding amount has been reached, the function must call payout.
      * [0] -> contribution was made
      */
-    function fund(address _contributor) public payable returns (bool successful) {
+    function fund(address payable  _contributor) public payable returns (bool successful) {
 
         // Check amount is greater than 0
         require(msg.value > 0,"Funding contributions must be greater than 0 wei");
@@ -124,14 +124,14 @@ contract Crowdfunding {
         // 1. Check that the project dealine has not passed
         if (block.number > properties.deadline) {
             emit LogFundingFailed(address(this), totalFunding, contributionsCount);
-            require(_contributor.transfer(msg.value),"Project deadline has passed, problem returning contribution");
+            require(_contributor.send(msg.value),"Project deadline has passed, problem returning contribution");
             return false;
         }
 
         // 2. Check that funding goal has not already been met
         if (totalFunding >= properties.goal) {
             emit LogFundingGoalReached(address(this), totalFunding, contributionsCount);
-            require(_contributor.transfer(msg.value),"Project deadline has passed, problem returning contribution");
+            require(_contributor.send(msg.value),"Project deadline has passed, problem returning contribution");
             payout();
             return false;
         }
@@ -140,7 +140,7 @@ contract Crowdfunding {
         uint prevContributionBalance = contributors[_contributor];
 
         // Add contribution to contributions map
-        Contribution c = contributions[contributionsCount];
+        Contribution memory c = contributions[contributionsCount];
         c.contributor = _contributor;
         c.amount = msg.value;
 
@@ -154,8 +154,8 @@ contract Crowdfunding {
         if (prevContributionBalance == 0) {
             contributorsCount++;
         }
-
-        emit LogContributionReceived(this, _contributor, msg.value);
+        address payable addr = address(uint160(address(this)));
+        emit LogContributionReceived(addr, _contributor, msg.value);
 
         // Check again to see whether the last contribution met the fundingGoal
         if (totalFunding >= properties.goal) {
@@ -176,7 +176,7 @@ contract Crowdfunding {
         // prevent re-entrancy
         totalFunding = 0;
 
-        if (properties.creator.transfer(amount)) {
+        if (properties.creator.send(amount)) {
             return true;
         } else {
             totalFunding = amount;
@@ -204,7 +204,7 @@ contract Crowdfunding {
         //prevent re-entrancy attack
         contributors[msg.sender] = 0;
 
-        if (msg.sender.transfer(amount)) {
+        if (msg.sender.send(amount)) {
             emit LogRefundIssued(address(this), msg.sender, amount);
             return true;
         } else {
