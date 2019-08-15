@@ -4,7 +4,7 @@ import "./Project.sol";
 
 contract FundingHub {
 
-    address public owner;
+    address payable public owner;
     uint public numOfProjects;
 
     mapping (uint => address) public projects;
@@ -35,8 +35,8 @@ contract FundingHub {
         require(block.number < _deadline,"Project deadline must be greater than the current block");
 
         Project p = new Project(_fundingGoal, _deadline, _title, msg.sender);
-        projects[numOfProjects] = p;
-        emit LogProjectCreated(numOfProjects, _title, p, msg.sender);
+        projects[numOfProjects] = address(p);
+        emit LogProjectCreated(numOfProjects, _title, address(p), msg.sender);
         numOfProjects++;
         return p;
     }
