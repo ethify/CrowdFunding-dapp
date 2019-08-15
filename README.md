@@ -18,10 +18,29 @@ The creator asking for funds should set a deadline for raising 100% of the funds
 
 ## Submission Requirements
 
-* You should aim for a viable permaweb-based app with the smart contract fully respecting the challenge description.
+- You should aim for a viable permaweb-based app with the smart contract fully respecting the challenge description.
 
-* The project needs to be open-source and released on GitHub for us to review the entire source.
+- The project needs to be open-source and released on GitHub for us to review the entire source.
 
+## Evaluation checklist
+
+- [x] README.md
+
+* Fund Raising...
+
+- [x] Creator asking for funds should set a deadline for raising 100% of the funds.
+- [x] Creater should define a Timeline.
+- [x] Funds should split into creater-defined batches, with each being linked to a milstone.
+- [x] If the full amount isn't raised, then balance is automatically returned to the project backers.
+
+* Fully Funded
+
+- [x] The first batch of funds is released to the creator to start the project.
+
+- [x] The creator publishes a report at the end of each milestone.
+- [x] If a majority (perhaps a majority with a quorum, or supermajority) of backers are unsatisfied with the progress, they can then vote to suspend the project, stop future payouts, and return the remaining funds to the backers. If completed, the next batch is released to the creator.
+
+- [x] Follow the same rules until all milestones are completed, and all funds have been distributed, or until backers vote to suspend the project.
 
 ## Team Members
 
