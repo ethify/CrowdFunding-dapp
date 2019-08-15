@@ -81,7 +81,7 @@ contract Project {
     * [7] -> Project.fundingHub
     * [8] -> Project (address)
     */
-    function getProject() public returns (string memory, uint, uint, address, uint, uint, uint, address, address) {
+    function getProject() public view returns (string memory, uint, uint, address, uint, uint, uint, address, address) {
         return (properties.title,
                 properties.goal,
                 properties.deadline,
@@ -98,7 +98,7 @@ contract Project {
     * [0] -> Contribution.amount
     * [1] -> Contribution.contributor
     */
-    function getContribution(uint _id) public returns (uint, address) {
+    function getContribution(uint _id) public view returns (uint, address) {
         Contribution memory c = contributions[_id];
         return (c.amount, c.contributor);
     }
@@ -172,12 +172,7 @@ contract Project {
         // prevent re-entrancy
         totalFunding = 0;
 
-        if (properties.creator.transfer(amount)) {
-            return true;
-        } else {
-            totalFunding = amount;
-            return false;
-        }
+        properties.creator.transfer(amount);
 
         return true;
     }
@@ -200,14 +195,9 @@ contract Project {
         //prevent re-entrancy attack
         contributors[msg.sender] = 0;
 
-        if (msg.sender.transfer(amount)) {
-            emit LogRefundIssued(address(this), msg.sender, amount);
-            return true;
-        } else {
-            contributors[msg.sender] = amount;
-            emit LogFailure("Refund did not send successfully");
-            return false;
-        }
+        msg.sender.transfer(amount);
+        emit LogRefundIssued(address(this), msg.sender, amount);
+
         return true;
     }
 
