@@ -1,6 +1,7 @@
 import React, { Component } from "react";
 import { Modal, Form, Button, Select } from "semantic-ui-react";
 
+const TEST = 2 * 60;
 const DAY = 1 * 24 * 60 * 60;
 const WEEK = 7 * 24 * 60 * 60;
 const MONTH = 30 * 24 * 60 * 60;
@@ -66,7 +67,8 @@ class CreateProjectModal extends Component {
                   options={[
                     { key: "0", text: "1 Day (1*24*60*60)", value: DAY },
                     { key: "1", text: "1 Week (7*24*60*60)", value: WEEK },
-                    { key: "2", text: "1 Month (30*24*60*60)", value: MONTH }
+                    { key: "2", text: "1 Month (30*24*60*60)", value: MONTH },
+                    { key: "3", text: "TEST (2 MINUTES)", value: TEST }
                   ]}
                   onChange={this.handleChange}
                 />
