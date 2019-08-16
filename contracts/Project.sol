@@ -1,20 +1,12 @@
 pragma solidity ^0.5.0;
 
-import "node_modules/openzeppelin-solidity/contracts/crowdsale/Crowdsale.sol";
-
-contract Crowdfunding is Crowdsale{
-  
-  constructor() public {
-  }
-}
-
 contract Project {
 
     struct Properties {
         uint goal;
         uint deadline;
         string title;
-        address creator;
+        address payable creator;
     }
 
     struct Contribution {
@@ -22,7 +14,7 @@ contract Project {
         address contributor;
     }
 
-    address public fundingHub;
+    address payable public fundingHub;
 
     mapping (address => uint) public contributors;
     mapping (uint => Contribution) public contributions;
@@ -42,36 +34,25 @@ contract Project {
     event LogFailure(string message);
 
     modifier onlyFundingHub {
-        if (fundingHub != msg.sender) throw;
+        require(fundingHub == msg.sender,"...");
         _;
     }
 
     modifier onlyFunded {
-        if (totalFunding < properties.goal) {
-            throw;
-        }
+        require(totalFunding >= properties.goal,"...");
         _;
     }
 
-    function Project(uint _fundingGoal, uint _deadline, string _title, address _creator) {
+    constructor(uint _fundingGoal, uint _deadline, string memory _title, address payable _creator) public{
 
         // Check to see the funding goal is greater than 0
-        if (_fundingGoal <= 0) {
-            LogFailure("Project funding goal must be greater than 0");
-            throw;
-        }
+        require(_fundingGoal > 0, "Project funding goal must be greater than 0");
 
         // Check to see the deadline is in the future
-        if (block.number >= _deadline) {
-            LogFailure("Project deadline must be greater than the current block");
-            throw;
-        }
+        require(block.number < _deadline, "Project deadline must be greater than the current block");
 
         // Check to see that a creator (payout) address is valid
-        if (_creator == 0) {
-            LogFailure("Project must include a valid creator address");
-            throw;
-        }
+        require(_creator != address(0), "Project must include a valid creator address");
 
         fundingHub = msg.sender;
 
@@ -100,7 +81,7 @@ contract Project {
     * [7] -> Project.fundingHub
     * [8] -> Project (address)
     */
-    function getProject() returns (string, uint, uint, address, uint, uint, uint, address, address) {
+    function getProject() public returns (string memory, uint, uint, address, uint, uint, uint, address, address) {
         return (properties.title,
                 properties.goal,
                 properties.deadline,
@@ -117,50 +98,36 @@ contract Project {
     * [0] -> Contribution.amount
     * [1] -> Contribution.contributor
     */
-    function getContribution(uint _id) returns (uint, address) {
-        Contribution c = contributions[_id];
+    function getContribution(uint _id) public returns (uint, address) {
+        Contribution memory c = contributions[_id];
         return (c.amount, c.contributor);
     }
 
     /**
-    * This is the function called when the FundingHub receives a contribution. 
-    * If the contribution was sent after the deadline of the project passed, 
-    * or the full amount has been reached, the function must return the value 
-    * to the originator of the transaction. 
-    * If the full funding amount has been reached, the function must call payout. 
+    * This is the function called when the FundingHub receives a contribution.
+    * If the contribution was sent after the deadline of the project passed,
+    * or the full amount has been reached, the function must return the value
+    * to the originator of the transaction.
+    * If the full funding amount has been reached, the function must call payout.
     * [0] -> contribution was made
     */
-    function fund(address _contributor) payable returns (bool successful) {
+    function fund(address payable _contributor) public payable returns (bool successful) {
 
         // Check amount is greater than 0
-        if (msg.value <= 0) {
-            LogFailure("Funding contributions must be greater than 0 wei");
-            throw;
-        }
+        require(msg.value > 0,"Funding contributions must be greater than 0 wei");
 
         // Check funding only comes thru fundingHub
-        if (msg.sender != fundingHub) {
-            LogFailure("Funding contributions can only be made through FundingHub contract");
-            throw;
-        }
+        require(msg.sender == fundingHub, "Funding contributions can only be made through FundingHub contract");
 
         // 1. Check that the project dealine has not passed
         if (block.number > properties.deadline) {
-            LogFundingFailed(address(this), totalFunding, contributionsCount);
-            if (!_contributor.send(msg.value)) {
-                LogFailure("Project deadline has passed, problem returning contribution");
-                throw;
-            } 
+            emit LogFundingFailed(address(this), totalFunding, contributionsCount);
             return false;
         }
 
         // 2. Check that funding goal has not already been met
         if (totalFunding >= properties.goal) {
-            LogFundingGoalReached(address(this), totalFunding, contributionsCount);
-            if (!_contributor.send(msg.value)) {
-                LogFailure("Project deadline has passed, problem returning contribution");
-                throw;
-            }
+            emit LogFundingGoalReached(address(this), totalFunding, contributionsCount);
             payout();
             return false;
         }
@@ -169,7 +136,7 @@ contract Project {
         uint prevContributionBalance = contributors[_contributor];
 
         // Add contribution to contributions map
-        Contribution c = contributions[contributionsCount];
+        Contribution memory c = contributions[contributionsCount];
         c.contributor = _contributor;
         c.amount = msg.value;
 
@@ -184,11 +151,11 @@ contract Project {
             contributorsCount++;
         }
 
-        LogContributionReceived(this, _contributor, msg.value);
+        emit LogContributionReceived(address(this), _contributor, msg.value);
 
-        // Check again to see whether the last contribution met the fundingGoal 
+        // Check again to see whether the last contribution met the fundingGoal
         if (totalFunding >= properties.goal) {
-            LogFundingGoalReached(address(this), totalFunding, contributionsCount);
+            emit LogFundingGoalReached(address(this), totalFunding, contributionsCount);
             payout();
         }
 
@@ -199,13 +166,13 @@ contract Project {
     * If funding goal has been met, transfer fund to project creator
     * [0] -> payout was successful
     */
-    function payout() payable onlyFunded returns (bool successful) {
+    function payout() public payable onlyFunded returns (bool successful) {
         uint amount = totalFunding;
 
         // prevent re-entrancy
         totalFunding = 0;
 
-        if (properties.creator.send(amount)) {
+        if (properties.creator.transfer(amount)) {
             return true;
         } else {
             totalFunding = amount;
@@ -220,31 +187,25 @@ contract Project {
     * This is slightly different that the final project requirements, see README for details
     * [0] -> refund was successful
     */
-    function refund() payable returns (bool successful) {
+    function refund() public payable returns (bool successful) {
 
         // Check that the project dealine has passed
-        if (block.number < properties.deadline) {
-            LogFailure("Refund is only possible if project is past deadline");
-            throw;
-        }
+        require(block.number >= properties.deadline, "Refund is only possible if project is past deadline");
 
         // Check that funding goal has not already been met
-        if (totalFunding >= properties.goal) {
-            LogFailure("Refund is not possible if project has met goal");
-            throw;
-        }
+        require(totalFunding < properties.goal, "Refund is not possible if project has met goal");
 
         uint amount = contributors[msg.sender];
-        
+
         //prevent re-entrancy attack
         contributors[msg.sender] = 0;
 
-        if (msg.sender.send(amount)) {
-            LogRefundIssued(address(this), msg.sender, amount);
+        if (msg.sender.transfer(amount)) {
+            emit LogRefundIssued(address(this), msg.sender, amount);
             return true;
         } else {
             contributors[msg.sender] = amount;
-            LogFailure("Refund did not send successfully");
+            emit LogFailure("Refund did not send successfully");
             return false;
         }
         return true;
@@ -254,10 +215,10 @@ contract Project {
         selfdestruct(fundingHub);
     }
 
-    /** 
+    /**
     * Don't allow Ether to be sent blindly to this contract
     */
-    function() {
-        throw;
+    function() external{
+        revert("...");
     }
 }
