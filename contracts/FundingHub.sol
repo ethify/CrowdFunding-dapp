@@ -28,17 +28,18 @@ contract FundingHub {
     * Create a new Project contract
     * [0] -> new Project contract address
     */
-    function createProject(uint _fundingGoal, uint _deadline, string memory _title) public payable returns (Project projectAddress) {
+    function createProject(uint _fundingGoal, uint _deadline, string memory _title) public payable returns (address) {
 
         require(_fundingGoal > 0,"Project funding goal must be greater than 0");
+        uint256 deadline = block.timestamp + _deadline;
 
-        require(block.number < _deadline,"Project deadline must be greater than the current block");
+        require(block.timestamp < deadline,"Project deadline must be greater than the current block");
 
-        Project p = new Project(_fundingGoal, _deadline, _title, msg.sender);
+        Project p = new Project(_fundingGoal, deadline, _title, msg.sender);
         projects[numOfProjects] = address(p);
         emit LogProjectCreated(numOfProjects, _title, address(p), msg.sender);
         numOfProjects++;
-        return p;
+        return address(p);
     }
 
     /**

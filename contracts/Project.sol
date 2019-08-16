@@ -49,7 +49,7 @@ contract Project {
         require(_fundingGoal > 0, "Project funding goal must be greater than 0");
 
         // Check to see the deadline is in the future
-        require(block.number < _deadline, "Project deadline must be greater than the current block");
+        require(block.timestamp < _deadline, "Project deadline must be greater than the current block time");
 
         // Check to see that a creator (payout) address is valid
         require(_creator != address(0), "Project must include a valid creator address");
@@ -120,7 +120,7 @@ contract Project {
         require(msg.sender == fundingHub, "Funding contributions can only be made through FundingHub contract");
 
         // 1. Check that the project dealine has not passed
-        if (block.number > properties.deadline) {
+        if (block.timestamp > properties.deadline) {
             emit LogFundingFailed(address(this), totalFunding, contributionsCount);
             return false;
         }
@@ -185,7 +185,7 @@ contract Project {
     function refund() public payable returns (bool successful) {
 
         // Check that the project dealine has passed
-        require(block.number >= properties.deadline, "Refund is only possible if project is past deadline");
+        require(block.timestamp >= properties.deadline, "Refund is only possible if project is past deadline");
 
         // Check that funding goal has not already been met
         require(totalFunding < properties.goal, "Refund is not possible if project has met goal");
